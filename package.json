@@ -9,7 +9,8 @@
     "lint": "ng lint",
     "e2e": "ng e2e",
     "packagr": "ng-packagr -p ./src/app/services/package.json",
-    "pack:lib": "cd src/app/services/dist && npm pack && cd ../../../.."
+    "pack:lib": "cd src/app/services/dist && npm pack && cd ../../../..",
+    "build:lib": "npm run packagr && npm run pack:lib"
   },
   "private": true,
   "dependencies": {

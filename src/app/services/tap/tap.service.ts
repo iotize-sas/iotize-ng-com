@@ -1,31 +1,25 @@
 import { Injectable } from '@angular/core';
 import { Tap, SessionState } from '@iotize/device-client.js/device';
 import { ComProtocol } from '@iotize/device-client.js/protocol/api';
-import { Events } from '@ionic/angular';
+import { Observable, Subscription } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
 export class IoTizeTap {
 
+  connectedModule?: string;
   isReady = false;
   tap: Tap;
   connectionPromise?: Promise<any> = null;
   session?: SessionState = null;
+  private sessionSubscription?: Subscription = null;
 
-  get isLogged(): boolean {
-    if (this.session) {
-      return this.session.name !== 'anonymous';
-    }
-    return false;
-  }
-
-  constructor(public events: Events) { }
+  constructor() { }
   /**
    * Initialize a communication with the given protocol, creating a new .
    * It connects to the Tap and gets the current session state
    * @returns promise resolved on connection success
-   * @event **connected** Ionic event triggered on connection success
    * @throws On connection failure, promise is rejected
    * @param protocol Communication protocol, using BLE,NFC or WiFi, attached to an IoTize Tap
    */
@@ -33,16 +27,21 @@ export class IoTizeTap {
     this.isReady = false;
     try {
       this.tap = Tap.create();
+      this.sessionSubscription = this.sessionState()
+        .subscribe(session => {
+          console.log("session changed");
+          this.session = session;
+        });
       console.log('tap created');
       this.connectionPromise = this.connect(protocol);
       console.log('waiting for connection promise');
       await this.connectionPromise;
-      await this.checkSessionState();
+      this.connectedModule = (await this.tap.service.interface.getAppName()).body();
       this.isReady = true;
-      this.events.publish('connected');
     } catch (error) {
       console.error('init failed');
       console.error(error);
+      this.isReady = false;
       throw new Error('Connection Failed: ' + (error.message? error.message : error));
     }
   }
@@ -58,17 +57,14 @@ export class IoTizeTap {
 
   /**
    * Disconnects from the current tap
-   * @event disconnected published on tap disconnection
    */
   async disconnect(): Promise<void> {
     try {
       this.isReady = false;
       await this.tap.disconnect();
-      await this.checkSessionState();
-      this.events.publish('disconnected');
+      this.clear();
     } catch (error) {
       console.log(error);
-      this.events.publish('disconnected');
       throw (error);
     }
   }
@@ -85,32 +81,27 @@ export class IoTizeTap {
    */
   clear() {
     this.isReady = false;
+    this.sessionSubscription.unsubscribe();
     this.tap = null;
+    this.connectedModule = null;
   }
 
   /**
-   * Logs on the current Tap with the given credentials
+   * Logs on the current Tap with the given credentials, and refresh session state
    * @param user
    * @param password
-   * @event logged-in triggered on user authentication
-   * @event logged-out triggered on user log out
    * @returns true on login success
    */
   async login(user: string, password: string): Promise<boolean> {
     try {
       console.log('trying to log as ', user);
-      const logSuccess = await this.tap.login(user, password, false);
-      if (logSuccess) {
-        await this.checkSessionState();
-      }
+      const logSuccess = await this.tap.login(user, password);
       return logSuccess;
     } catch (error) {
       throw error;
     }
   }
  /**
-  * @event logged-in triggered on user authentication
-  * @event logged-out triggered on user log out
   */
   async logout(): Promise<boolean> {
     try {
@@ -119,7 +110,6 @@ export class IoTizeTap {
       return false;
     }
     try {
-      await this.checkSessionState();
       return true;
     } catch (error) {
       return false;
@@ -130,19 +120,7 @@ export class IoTizeTap {
    * retrieves session state from the current Tap [see device-client.js SessionState](http://developer.iotize.com/reference/typedoc/iotize-device-client.js/0.0.1-alpha.64/interfaces/_device_iotize_device_.sessionstate.html)
    */
 
-  async checkSessionState() {
-    if (!this.tap.isConnected()) {
-      this.session = null;
-      return;
-    }
-    const previouslyConnectedProfile = this.session? this.session.name : '';
-    this.session = await this.tap.refreshSessionState();
-    if (previouslyConnectedProfile !== ''){ // not the first sessionState
-      if (this.session.name === 'anonymous') {
-        this.events.publish('logged-out');
-      } else if (previouslyConnectedProfile !== this.session.name){
-        this.events.publish('logged-in', this.session.name);
-      }
-    } 
+  sessionState(): Observable<SessionState> {
+    return this.tap.sessionState;
   }
 }

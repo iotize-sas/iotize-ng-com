@@ -1,16 +1,11 @@
 import { Observable, Subject } from 'rxjs';
 import { Injectable } from '@angular/core';
-import { BLEComProtocol } from '@iotize/cordova-plugin-iotize-ble';
+import { BLEComProtocol, BLEScanner } from '@iotize/cordova-plugin-iotize-ble';
 import { ComProtocol } from '@iotize/device-client.js/protocol/api';
-import { IoTizeNgService } from "./../ng-service-interface";
+import { IoTizeComService, DiscoveredDeviceType } from "../com-service-interface";
 
 declare var iotizeBLE: any;
 
-export interface DiscoveredDeviceType {
-  name: string;
-  address: string;
-  rssi?: number;
-}
 
 @Injectable({
   providedIn: 'root'
@@ -18,37 +13,17 @@ export interface DiscoveredDeviceType {
 /**
  * This service gives access 
  */
-export class IoTizeBle implements IoTizeNgService {
+export class IoTizeBle implements IoTizeComService {
 
-  private _isScanning = false;
+  private scanner = new BLEScanner();
   get isScanning() {
-    return this._isScanning;
-  }
-  private devices$: Subject<DiscoveredDeviceType>;
-
-  constructor() {
-    this.devices$ = new Subject<DiscoveredDeviceType>();
+    return this.scanner.isScanning;
   }
 
-  startScan() {
+  constructor() {}
 
-    console.log('Start Scanning ...');
-
-      iotizeBLE.startScan((result) => {
-        console.log(result);
-        this._isScanning = true;
-        if (result === 'Ok') return;
-
-        this.devices$.next(result);
-      }, (error) => {
-        iotizeBLE.getLastError((lasterror) => {
-          console.log('error ' + lasterror);
-          this._isScanning = false;
-          this.devices$.error(error);
-        });
-      });
-
-      return this.devices();
+  startScan(): Subject<DiscoveredDeviceType> {
+    return this.scanner.start({});
   }
 
   checkAvailable(): Promise<void> {
@@ -70,24 +45,12 @@ export class IoTizeBle implements IoTizeNgService {
    */
 
   devices(): Observable<DiscoveredDeviceType> {
-    return this.devices$.asObservable();
+    return this.scanner.devicesObservable();
   }
 
   stopScan() {
     console.log('Stop Scanning ...');
-    this._isScanning = false;
-    return new Promise<void>((resolve,reject) => {
-
-      iotizeBLE.stopScan((result) => {
-        console.log(result);
-        this._isScanning = false;
-        resolve();
-      },
-      (error) => {
-        console.log('failed : ' + error);
-        reject(error);
-      });
-    });
+      this.scanner.stop();
     }
 
   getProtocol(device: DiscoveredDeviceType | string): ComProtocol {

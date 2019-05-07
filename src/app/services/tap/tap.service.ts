@@ -8,7 +8,6 @@ import { Observable, Subscription } from 'rxjs';
 })
 export class IoTizeTap {
 
-  connectedModule?: string;
   isReady = false;
   tap: Tap;
   connectionPromise?: Promise<any> = null;
@@ -36,7 +35,7 @@ export class IoTizeTap {
       this.connectionPromise = this.connect(protocol);
       console.log('waiting for connection promise');
       await this.connectionPromise;
-      this.connectedModule = (await this.tap.service.interface.getAppName()).body();
+      console.log('Connected');
       this.isReady = true;
     } catch (error) {
       console.error('init failed');
@@ -81,9 +80,10 @@ export class IoTizeTap {
    */
   clear() {
     this.isReady = false;
-    this.sessionSubscription.unsubscribe();
+    if (this.sessionSubscription) {
+      this.sessionSubscription.unsubscribe();
+    }
     this.tap = null;
-    this.connectedModule = null;
   }
 
   /**
@@ -122,5 +122,9 @@ export class IoTizeTap {
 
   sessionState(): Observable<SessionState> {
     return this.tap.sessionState;
+  }
+
+  sessionStateForceUpdate() {
+    this.tap.refreshSessionState();
   }
 }

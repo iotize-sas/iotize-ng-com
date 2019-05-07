@@ -1,8 +1,9 @@
-import { Observable, Subject } from 'rxjs';
+import { Observable, Subscription, PartialObserver, BehaviorSubject } from 'rxjs';
 import { Injectable } from '@angular/core';
 import { BLEComProtocol, BLEScanner } from '@iotize/cordova-plugin-iotize-ble';
 import { ComProtocol } from '@iotize/device-client.js/protocol/api';
 import { IoTizeComService, DiscoveredDeviceType } from "../com-service-interface";
+import { distinct } from "rxjs/operators";
 
 declare var iotizeBLE: any;
 
@@ -16,15 +17,34 @@ declare var iotizeBLE: any;
 export class IoTizeBle implements IoTizeComService {
 
   private scanner = new BLEScanner();
+  private devicesArray$: BehaviorSubject<DiscoveredDeviceType[]>;
+  private _devicesArray : DiscoveredDeviceType[] = [];
+  private scannerSubscription: Subscription;
   get isScanning() {
     return this.scanner.isScanning;
   }
+  constructor() {
+    this.initObservables();
+  }
 
-  constructor() {}
+  private initObservables() {
+    this.devicesArray$ = new BehaviorSubject<DiscoveredDeviceType[]>([]);
+    const observer: PartialObserver<DiscoveredDeviceType> = {
+      next: val => {
+        this._devicesArray.push(val);
+        this.devicesArray$.next(this._devicesArray);
+      }
+    }
+    this.scannerSubscription = this.devices().pipe(
+      distinct( _ => _.address) // filtering by address
+    ).subscribe(observer)
+  }
 
   startScan(): Observable<DiscoveredDeviceType> {
     this.scanner.start({});
-    return this.devices();
+    return this.devices().pipe(
+      distinct( _ => _.address)
+    );
   }
 
   checkAvailable(): Promise<void> {
@@ -47,6 +67,16 @@ export class IoTizeBle implements IoTizeComService {
 
   devices(): Observable<DiscoveredDeviceType> {
     return this.scanner.devicesObservable();
+  }
+
+  devicesArray(): Observable<DiscoveredDeviceType[]> {
+    return this.devicesArray$.asObservable();
+  }
+
+  clearDevices(except: DiscoveredDeviceType[] = []) {
+    this._devicesArray = except;
+    this.scannerSubscription.unsubscribe();
+    this.initObservables();
   }
 
   stopScan() {

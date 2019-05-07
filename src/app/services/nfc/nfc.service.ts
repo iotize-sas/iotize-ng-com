@@ -51,6 +51,13 @@ export class IoTizeNfc implements IoTizeComService {
     console.error('[IoTizeNFC] ERROR: ' + error.message ? error.message : error);
   }
 
+  devicesArray(): Observable<DiscoveredDeviceType[]> {
+    throw new Error("Method not implemented.");
+  }
+  clearDevices(): void {
+    throw new Error("Method not implemented.");
+  }
+
   private ndefToDiscoveredDevice(ndef: NdefEvent): DiscoveredDeviceType {
     console.log(ndef);
     let message = ndef.tag.ndefMessage;

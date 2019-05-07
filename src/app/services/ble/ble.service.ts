@@ -22,8 +22,9 @@ export class IoTizeBle implements IoTizeComService {
 
   constructor() {}
 
-  startScan(): Subject<DiscoveredDeviceType> {
-    return this.scanner.start({});
+  startScan(): Observable<DiscoveredDeviceType> {
+    this.scanner.start({});
+    return this.devices();
   }
 
   checkAvailable(): Promise<void> {

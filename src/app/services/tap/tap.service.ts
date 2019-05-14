@@ -41,7 +41,7 @@ export class IoTizeTap {
       console.error('init failed');
       console.error(error);
       this.isReady = false;
-      throw new Error('Connection Failed: ' + (error.message? error.message : error));
+      throw error;
     }
   }
 

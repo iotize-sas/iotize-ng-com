@@ -12,7 +12,7 @@ declare var iotizeBLE: any;
   providedIn: 'root'
 })
 /**
- * This service gives access 
+ * This class gives access to the IoTize BLE cordova plugin within an injectable angular service
  */
 export class IoTizeBle implements IoTizeComService {
 
@@ -20,6 +20,9 @@ export class IoTizeBle implements IoTizeComService {
   private devicesArray$: BehaviorSubject<DiscoveredDeviceType[]>;
   private _devicesArray : DiscoveredDeviceType[] = [];
   private scannerSubscription: Subscription;
+  /**
+   * @returns {boolean} BLE scanner status
+   */
   get isScanning() {
     return this.scanner.isScanning;
   }

@@ -87,8 +87,8 @@ export class IoTizeBle implements IoTizeComService {
       this.scanner.stop();
     }
 
-  getProtocol(device: DiscoveredDeviceType | string, comProtocolOptions?: ComProtocolOptions): ComProtocol {
+  getProtocol(device: DiscoveredDeviceType | string, options?: ComProtocolOptions): ComProtocol {
     const deviceAddress = (typeof device !== 'string') ? device.address : device;
-    return new BLEComProtocol(deviceAddress, comProtocolOptions);
+    return new BLEComProtocol(deviceAddress, options);
   }
 }

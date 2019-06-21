@@ -1,7 +1,7 @@
 import { Observable, Subscription, PartialObserver, BehaviorSubject } from 'rxjs';
 import { Injectable } from '@angular/core';
 import { BLEComProtocol, BLEScanner } from '@iotize/cordova-plugin-iotize-ble';
-import { ComProtocol } from '@iotize/device-client.js/protocol/api';
+import { ComProtocol, ComProtocolOptions } from '@iotize/device-client.js/protocol/api';
 import { IoTizeComService, DiscoveredDeviceType } from "../com-service-interface";
 import { distinct } from "rxjs/operators";
 
@@ -87,8 +87,8 @@ export class IoTizeBle implements IoTizeComService {
       this.scanner.stop();
     }
 
-  getProtocol(device: DiscoveredDeviceType | string): ComProtocol {
+  getProtocol(device: DiscoveredDeviceType | string, comProtocolOptions?: ComProtocolOptions): ComProtocol {
     const deviceAddress = (typeof device !== 'string') ? device.address : device;
-    return new BLEComProtocol(deviceAddress);
+    return new BLEComProtocol(deviceAddress, comProtocolOptions);
   }
 }

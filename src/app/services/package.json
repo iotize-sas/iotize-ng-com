@@ -1,16 +1,15 @@
 {
     "$schema": "../../../node_modules/ng-packagr/ng-package.schema.json",
-    "name": "iotize-ng-com",
-    "version": "0.0.0",
+    "name": "@iotize/ng-com-services",
+    "version": "0.0.1",
     "license": "MIT",
-    "private": true,
     "peerDependencies": {
       "@angular/core": "~7.2.0",
       "@ionic/angular":"^4.3.0",
       "@ionic-native/nfc":"^5.5.1",
-      "@iotize/cordova-plugin-iotize-ble":"^1.1.0-alpha.24",
-      "@iotize/device-client.js":"^0.0.1-alpha.78",
-      "@iotize/device-com-nfc.cordova":"^1.1.0-alpha.4",
+      "@iotize/cordova-plugin-iotize-ble":"^1.1.0-alpha.28",
+      "@iotize/device-client.js":"^0.0.1-alpha.90",
+      "@iotize/device-com-nfc.cordova":"^1.0.0-alpha.7",
       "rxjs":"^6.3.3"
     },
     "lib": {

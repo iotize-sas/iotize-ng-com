@@ -2,6 +2,7 @@
 
 # compiled output
 /dist
+/src/app/services/dist
 /tmp
 /out-tsc
 # Only exists if Bazel was run
@@ -44,4 +45,3 @@ testem.log
 # System Files
 .DS_Store
 Thumbs.db
-dist
